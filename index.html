@@ -70,7 +70,7 @@ const $=s=>document.querySelector(s),E=v=>String(v==null?'':v).replace(/[&<>"]/g
 const N=v=>Number(v)||0,day=v=>String(v||'').slice(0,10),money=n=>'₹'+N(n).toLocaleString('en-IN'),lab=k=>k.replace(/([a-z])([A-Z])/g,'$1 $2');
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const toast=(m,e)=>{const t=$('#toast');t.textContent=m;t.className='show'+(e?' err':'');setTimeout(()=>t.className='',2500)};
-const GAS_URL='PASTE_YOUR_GAS_WEB_APP_URL_HERE'; // Apps Script Web App URL (ends with /exec)
+const GAS_URL='https://script.google.com/macros/s/AKfycbzHziRxjte-jEuXRzbE6fLYbvgJckfObIS83bHbTvs2I1athrgTjk0vVXJidq-3YU8V/exec'; // Apps Script Web App URL (ends with /exec)
 const run=(f,...a)=>(async()=>{
  let key=localStorage.getItem('fc_key');
  if(!key){key=prompt('Fin Core access key daalein');if(!key){const e=new Error('Access key required');toast(e.message,1);throw e}}
