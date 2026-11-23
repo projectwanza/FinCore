@@ -6,6 +6,11 @@
 .lkb h2{margin:6px 0 2px}.lkb p{margin:0 0 14px;color:#64748b;min-height:18px}.lkb p.e{color:#dc2626}
 .lkb input{text-align:center;font-size:26px;letter-spacing:10px;margin-bottom:12px}.lkb .btn{width:100%;padding:12px;font-size:16px}
 </style>
+<link rel="manifest" href="manifest.json">
+<style>
+.card.sk{height:68px;border:0;box-shadow:none;background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);background-size:200% 100%;animation:sk 1.2s infinite linear}
+@keyframes sk{to{background-position:-200% 0}}
+</style>
 <meta name="theme-color" content="#1d4ed8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -103,11 +108,17 @@ const ft=(n,k)=>OPT[n+'.'+k]?'sel:'+n+'.'+k:OPT[k]?'sel:'+k:/Date|DOB/.test(k)?'
 const fmt=(k,v)=>{if(v===''||v==null)return'';if(/Amount|Requested|Approved|Disbursed|Income|EMI/.test(k))return money(v);if(/Date|DOB/.test(k))return day(v);
  if(k=='Status'){const c=/Disbursed|Approved|Converted|Done|Received|Active/.test(v)?'g':/Rejected|Lost|Inactive/.test(v)?'r':/Pending|Applied|New|Review/.test(v)?'y':'';return`<span class="bd ${c}">${E(v)}</span>`}return E(v)};
 const tel=v=>String(v).replace(/\D/g,'').slice(-10);
-function init(){run('getAll').then(r=>{S=r.schema;D=r.data;nav();render()})}
+const REST=['Payments','Employees','Documents','Activity'];let RL=false;
+function skeleton(){const t=(NAV.find(x=>x[0]==page)||[])[2]||page;
+ $('#c').innerHTML=`<h1>${t}</h1>`+(page=='Dashboard'?'<div class=cards>'+'<div class="card sk"></div>'.repeat(12)+'</div><div class="card sk" style="height:230px"></div>':'<div class="card sk" style="height:46px;margin-bottom:12px"></div>'+'<div class="card sk" style="height:84px;margin-bottom:10px"></div>'.repeat(5))}
+function init(){nav();skeleton();
+ fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:'{"fn":"ping"}'}).catch(()=>{});
+ run('getCore').then(r=>{S=r.schema;D=r.data;REST.forEach(n=>D[n]=[]);render();
+  run('getRest').then(x=>{Object.assign(D,x)}).catch(()=>{}).then(()=>{RL=true;if(REST.includes(page))render()})})}
 function nav(){$('#side').innerHTML='<h2><i class="fa fa-landmark"></i> Fin Core</h2>'+NAV.map(x=>`<a class="${page==x[0]?'on':''}" onclick="go('${x[0]}')"><i class="fa ${x[1]}"></i>${x[2]||x[0]}</a>`).join('')+'<a onclick="lockApp()"><i class="fa fa-lock"></i>Lock</a>';
  const B=[NAV[0],NAV[1],NAV[3],NAV[4]];$('#bot').innerHTML=B.map(x=>`<a class="${page==x[0]?'on':''}" onclick="go('${x[0]}')"><i class="fa ${x[1]}"></i>${x[2]||x[0]}</a>`).join('')+'<a onclick="$(\'#side\').classList.toggle(\'open\')"><i class="fa fa-bars"></i>Menu</a>'}
 function go(p){page=p;$('#side').classList.remove('open');nav();render();scrollTo(0,0)}
-function render(){Object.values(CH).forEach(c=>c.destroy());CH={};const t=(NAV.find(x=>x[0]==page)||[])[2]||page;$('#c').innerHTML=`<h1>${t}</h1><div id=p></div>`;
+function render(){if(!S.Customers||(!RL&&REST.includes(page))){skeleton();return}Object.values(CH).forEach(c=>c.destroy());CH={};const t=(NAV.find(x=>x[0]==page)||[])[2]||page;$('#c').innerHTML=`<h1>${t}</h1><div id=p></div>`;
  page=='Dashboard'?dash():page=='Reports'?reports():list(page)}
 // ---------- Dashboard
 function dash(){const A=D.Applications,F=D.FollowUps,C=D.Commissions,t=today(),sm=(a,k)=>a.reduce((s,x)=>s+N(x[k]),0),cnt=s=>A.filter(a=>a.Status==s).length;
