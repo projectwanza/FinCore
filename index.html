@@ -1,6 +1,11 @@
 <!DOCTYPE html><html><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fin Core</title>
-<link rel="manifest" href="manifest.json">
+<style>
+#lk{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0b2a6f,#1d4ed8);padding:16px}
+.lkb{background:#fff;border-radius:18px;padding:26px 22px;width:100%;max-width:340px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.lkb h2{margin:6px 0 2px}.lkb p{margin:0 0 14px;color:#64748b;min-height:18px}.lkb p.e{color:#dc2626}
+.lkb input{text-align:center;font-size:26px;letter-spacing:10px;margin-bottom:12px}.lkb .btn{width:100%;padding:12px;font-size:16px}
+</style>
 <meta name="theme-color" content="#1d4ed8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -71,15 +76,24 @@ const N=v=>Number(v)||0,day=v=>String(v||'').slice(0,10),money=n=>'₹'+N(n).toL
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const toast=(m,e)=>{const t=$('#toast');t.textContent=m;t.className='show'+(e?' err':'');setTimeout(()=>t.className='',2500)};
 const GAS_URL='https://script.google.com/macros/s/AKfycbzHziRxjte-jEuXRzbE6fLYbvgJckfObIS83bHbTvs2I1athrgTjk0vVXJidq-3YU8V/exec'; // Apps Script Web App URL (ends with /exec)
-const run=(f,...a)=>(async()=>{
- let key=localStorage.getItem('fc_key');
- if(!key){key=prompt('Fin Core access key daalein');if(!key){const e=new Error('Access key required');toast(e.message,1);throw e}}
- try{
-  const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:f,args:a,key:key})});
-  const j=await r.json();
-  if(!j.ok){if(/access key/i.test(j.error))localStorage.removeItem('fc_key');throw new Error(j.error)}
-  localStorage.setItem('fc_key',key);return j.data
- }catch(e){toast(e.message,1);throw e}
+let _pin=null;
+function askPin(msg,isErr){if(_pin)return _pin;
+ _pin=new Promise(ok=>{const d=document.createElement('div');d.id='lk';
+  d.innerHTML=`<div class=lkb><img src="icon-192.png" width=84 height=84 alt=""><h2>Fin Core</h2><p class="${isErr?'e':''}">${E(msg||'MPIN daalein')}</p><input id=lkp type=password inputmode=numeric autocomplete=off maxlength=8 placeholder="••••"><button class=btn id=lkb>Login</button></div>`;
+  document.body.appendChild(d);const go=()=>{const v=$('#lkp').value.trim();if(!v)return;d.remove();_pin=null;ok(v)};
+  $('#lkb').onclick=go;$('#lkp').onkeydown=e=>{if(e.key=='Enter')go()};$('#lkp').focus()});return _pin}
+const lockApp=()=>{sessionStorage.removeItem('fc_key');location.reload()};
+localStorage.removeItem('fc_key');
+const run=(f,...a)=>(async()=>{let msg='',bad=false;
+ for(;;){
+  const key=sessionStorage.getItem('fc_key')||await askPin(msg,bad);
+  try{
+   const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:f,args:a,key:key})});
+   const j=await r.json();
+   if(!j.ok){if(/MPIN/i.test(j.error)){sessionStorage.removeItem('fc_key');msg=j.error;bad=true;continue}throw new Error(j.error)}
+   sessionStorage.setItem('fc_key',key);return j.data
+  }catch(e){toast(e.message,1);throw e}
+ }
 })();
 const NAV=[['Dashboard','fa-gauge'],['Customers','fa-users'],['Leads','fa-bullseye'],['Applications','fa-file-signature'],['FollowUps','fa-bell','Follow-ups'],['Commissions','fa-coins'],['Payments','fa-credit-card'],['Documents','fa-folder-open'],['Employees','fa-user-tie'],['Reports','fa-chart-pie'],['Activity','fa-clock-rotate-left','Activity Log']];
 const COLS={Customers:['CustomerID','Name','Mobile','City','Category','Agent'],Leads:['LeadID','Name','Mobile','LoanType','Amount','Status'],Applications:['ApplicationID','CustomerName','LoanType','Provider','Requested','Disbursed','Status'],FollowUps:['FollowUpID','CustomerID','Date','Note','Status'],Commissions:['CommissionID','ApplicationID','Provider','Amount','Status'],Payments:['PaymentID','ApplicationID','Amount','Date','Mode'],Employees:['EmployeeID','Name','Mobile','Role','Status'],Documents:['DocumentID','CustomerID','ApplicationID','DocType','FileName'],Activity:['ActivityID','User','Action','CustomerID','DateTime','Description']};
@@ -90,7 +104,7 @@ const fmt=(k,v)=>{if(v===''||v==null)return'';if(/Amount|Requested|Approved|Disb
  if(k=='Status'){const c=/Disbursed|Approved|Converted|Done|Received|Active/.test(v)?'g':/Rejected|Lost|Inactive/.test(v)?'r':/Pending|Applied|New|Review/.test(v)?'y':'';return`<span class="bd ${c}">${E(v)}</span>`}return E(v)};
 const tel=v=>String(v).replace(/\D/g,'').slice(-10);
 function init(){run('getAll').then(r=>{S=r.schema;D=r.data;nav();render()})}
-function nav(){$('#side').innerHTML='<h2><i class="fa fa-landmark"></i> Fin Core</h2>'+NAV.map(x=>`<a class="${page==x[0]?'on':''}" onclick="go('${x[0]}')"><i class="fa ${x[1]}"></i>${x[2]||x[0]}</a>`).join('');
+function nav(){$('#side').innerHTML='<h2><i class="fa fa-landmark"></i> Fin Core</h2>'+NAV.map(x=>`<a class="${page==x[0]?'on':''}" onclick="go('${x[0]}')"><i class="fa ${x[1]}"></i>${x[2]||x[0]}</a>`).join('')+'<a onclick="lockApp()"><i class="fa fa-lock"></i>Lock</a>';
  const B=[NAV[0],NAV[1],NAV[3],NAV[4]];$('#bot').innerHTML=B.map(x=>`<a class="${page==x[0]?'on':''}" onclick="go('${x[0]}')"><i class="fa ${x[1]}"></i>${x[2]||x[0]}</a>`).join('')+'<a onclick="$(\'#side\').classList.toggle(\'open\')"><i class="fa fa-bars"></i>Menu</a>'}
 function go(p){page=p;$('#side').classList.remove('open');nav();render();scrollTo(0,0)}
 function render(){Object.values(CH).forEach(c=>c.destroy());CH={};const t=(NAV.find(x=>x[0]==page)||[])[2]||page;$('#c').innerHTML=`<h1>${t}</h1><div id=p></div>`;
