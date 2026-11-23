@@ -1,0 +1,169 @@
+<!DOCTYPE html><html><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fin Core</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fin Core">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--b:#1d4ed8;--bd:#0b2a6f;--bg:#f1f5f9;--t:#0f172a;--m:#64748b;--l:#e2e8f0}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--t)}
+#side{position:fixed;inset:0 auto 0 0;width:232px;background:linear-gradient(180deg,var(--bd),var(--b));color:#fff;padding:14px 10px;overflow:auto;z-index:30;transition:.2s}
+#side h2{margin:4px 10px 14px;font-size:17px}#side a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:#dbeafe;cursor:pointer;margin-bottom:2px}
+#side a:hover,#side a.on{background:rgba(255,255,255,.18);color:#fff}#side i{width:18px;text-align:center}
+main{margin-left:232px;padding:18px}h1{font-size:20px;margin:0 0 14px}
+#bot{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--l);z-index:20}
+#bot a{flex:1;text-align:center;padding:8px 2px;font-size:11px;color:var(--m);cursor:pointer}#bot a i{display:block;font-size:18px}#bot a.on{color:var(--b)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.st{display:flex;justify-content:space-between;align-items:center}.st b{font-size:20px;display:block}.st span{color:var(--m);font-size:12px}
+.st i{color:var(--b);background:#dbeafe;border-radius:10px;padding:10px;width:38px;text-align:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}.card h3{margin:0 0 10px;font-size:15px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.bar input,.bar select{flex:1;min-width:140px}
+input,select,textarea{padding:9px 10px;border:1px solid var(--l);border-radius:8px;font:inherit;width:100%;background:#fff}
+.btn{background:var(--b);color:#fff;border:0;padding:9px 14px;border-radius:8px;cursor:pointer;font:inherit}.btn.gh{background:#fff;color:var(--b);border:1px solid var(--b)}.btn.rd{background:#dc2626}
+.tw{overflow-x:auto;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+table{border-collapse:collapse;width:100%;min-width:560px}th,td{padding:10px;text-align:left;border-bottom:1px solid var(--l);white-space:nowrap}th{background:#f8fafc;color:var(--m);font-size:12px}
+td.a a,td.a button{margin-right:8px;color:var(--b);background:none;border:0;cursor:pointer;font-size:15px}
+.bd{padding:3px 9px;border-radius:99px;background:#dbeafe;color:var(--b);font-size:12px}.bd.g{background:#dcfce7;color:#15803d}.bd.r{background:#fee2e2;color:#b91c1c}.bd.y{background:#fef9c3;color:#a16207}
+.mo{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:10px}
+.md{background:#fff;border-radius:14px;padding:18px;max-width:780px;width:100%;max-height:92vh;overflow:auto}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.g label{font-size:12px;color:var(--m)}.g .w{grid-column:1/-1}
+.ac{margin-top:14px;display:flex;gap:8px}h4{margin:14px 0 6px;color:var(--b)}
+#toast{position:fixed;top:14px;right:14px;background:#15803d;color:#fff;padding:10px 16px;border-radius:8px;display:none;z-index:99}#toast.show{display:block}#toast.err{background:#dc2626}
+#menu{display:none}
+@media(max-width:899px){#side{transform:translateX(-100%)}#side.open{transform:none}main{margin-left:0;padding:12px 12px 78px}#bot{display:flex}.two{grid-template-columns:1fr}}
+</style>
+<style>
+.card{border:1px solid var(--l)}.card:hover{box-shadow:0 4px 14px rgba(29,78,216,.10)}
+canvas{max-width:100%}.btn{font-weight:600}.ac{flex-wrap:wrap}
+@media(max-width:899px){
+ h1{font-size:22px;margin-bottom:12px}
+ .cards{grid-template-columns:repeat(2,1fr);gap:10px}.card{padding:12px}
+ .st b{font-size:17px}.st span{font-size:11px}.st i{padding:8px;width:34px;font-size:13px}
+ .bar input{flex:1 1 100%}.bar select{flex:1}.bar .btn{flex:1 1 auto;text-align:center}
+ #bot{box-shadow:0 -4px 14px rgba(15,23,42,.08);padding-bottom:env(safe-area-inset-bottom)}
+ #bot a{padding:9px 2px;font-weight:600}
+ .mo{align-items:flex-end;padding:0}.md{border-radius:20px 20px 0 0;max-height:94vh;padding:18px 16px}
+ .ac .btn{flex:1 1 42%;text-align:center}
+ .g{grid-template-columns:1fr 1fr}.g .w{grid-column:1/-1}
+ .tw{background:none;box-shadow:none;overflow:visible}
+ .tw table,.tw tbody{display:block;width:100%;min-width:0}
+ .tw tr{display:block}.tw tr:not(:has(td)){display:none}
+ .tw tr:has(td){background:#fff;border:1px solid var(--l);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:10px;padding:8px 12px}
+ .tw td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:5px 0;white-space:normal;text-align:right;word-break:break-word}
+ .tw td:empty{display:none}
+ .tw td::before{content:attr(data-label);color:var(--m);font-size:12px;text-align:left;flex-shrink:0}
+ .tw td:first-child{font-weight:700;color:var(--b)}
+ .tw td.a{justify-content:flex-end;border-top:1px solid var(--l);margin-top:6px;padding-top:10px}.tw td.a::before{content:none}
+ .tw td.a a,.tw td.a button{font-size:17px;padding:7px 11px;background:#eff6ff;border-radius:9px;margin:0 0 0 6px;display:inline-block}
+}
+</style></head><body>
+<div id="side"></div><main><div id="c">Loading...</div></main><div id="bot"></div><div id="toast"></div><div id="mo"></div>
+<script>
+let S={},D={},page='Dashboard',CH={};
+const $=s=>document.querySelector(s),E=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const N=v=>Number(v)||0,day=v=>String(v||'').slice(0,10),money=n=>'₹'+N(n).toLocaleString('en-IN'),lab=k=>k.replace(/([a-z])([A-Z])/g,'$1 $2');
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const toast=(m,e)=>{const t=$('#toast');t.textContent=m;t.className='show'+(e?' err':'');setTimeout(()=>t.className='',2500)};
+const GAS_URL='PASTE_YOUR_GAS_WEB_APP_URL_HERE'; // Apps Script Web App URL (ends with /exec)
+const run=(f,...a)=>(async()=>{
+ let key=localStorage.getItem('fc_key');
+ if(!key){key=prompt('Fin Core access key daalein');if(!key){const e=new Error('Access key required');toast(e.message,1);throw e}}
+ try{
+  const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:f,args:a,key:key})});
+  const j=await r.json();
+  if(!j.ok){if(/access key/i.test(j.error))localStorage.removeItem('fc_key');throw new Error(j.error)}
+  localStorage.setItem('fc_key',key);return j.data
+ }catch(e){toast(e.message,1);throw e}
+})();
+const NAV=[['Dashboard','fa-gauge'],['Customers','fa-users'],['Leads','fa-bullseye'],['Applications','fa-file-signature'],['FollowUps','fa-bell','Follow-ups'],['Commissions','fa-coins'],['Payments','fa-credit-card'],['Documents','fa-folder-open'],['Employees','fa-user-tie'],['Reports','fa-chart-pie'],['Activity','fa-clock-rotate-left','Activity Log']];
+const COLS={Customers:['CustomerID','Name','Mobile','City','Category','Agent'],Leads:['LeadID','Name','Mobile','LoanType','Amount','Status'],Applications:['ApplicationID','CustomerName','LoanType','Provider','Requested','Disbursed','Status'],FollowUps:['FollowUpID','CustomerID','Date','Note','Status'],Commissions:['CommissionID','ApplicationID','Provider','Amount','Status'],Payments:['PaymentID','ApplicationID','Amount','Date','Mode'],Employees:['EmployeeID','Name','Mobile','Role','Status'],Documents:['DocumentID','CustomerID','ApplicationID','DocType','FileName'],Activity:['ActivityID','User','Action','CustomerID','DateTime','Description']};
+const OPT={Gender:['Male','Female','Other'],LoanType:['Personal Loan','Home Loan','Business Loan','Vehicle Loan','Loan Against Property','Gold Loan','Education Loan','Other'],DocType:['PAN Card','Aadhaar Card','Bank Statement','Salary Slip','Photograph','Address Proof','Business Documents','Other Documents'],Role:['Admin','Manager','Agent','Telecaller'],Mode:['Cash','UPI','Bank Transfer','Cheque'],Category:['Salaried','Self-Employed','Business','Other'],Source:['Walk-in','Referral','Online','Social Media','Other'],
+'Leads.Status':['New','Contacted','Interested','Converted','Lost'],'Applications.Status':['Applied','Under Review','Approved','Disbursed','Rejected'],'FollowUps.Status':['Pending','Done'],'Commissions.Status':['Pending','Received'],'Employees.Status':['Active','Inactive']};
+const ft=(n,k)=>OPT[n+'.'+k]?'sel:'+n+'.'+k:OPT[k]?'sel:'+k:/Date|DOB/.test(k)?'date':/Amount|Requested|Approved|Disbursed|Income|Rate|EMI|Tenure|Percent/.test(k)?'number':/Address|Remarks|Note/.test(k)?'textarea':'text';
+const fmt=(k,v)=>{if(v===''||v==null)return'';if(/Amount|Requested|Approved|Disbursed|Income|EMI/.test(k))return money(v);if(/Date|DOB/.test(k))return day(v);
+ if(k=='Status'){const c=/Disbursed|Approved|Converted|Done|Received|Active/.test(v)?'g':/Rejected|Lost|Inactive/.test(v)?'r':/Pending|Applied|New|Review/.test(v)?'y':'';return`<span class="bd ${c}">${E(v)}</span>`}return E(v)};
+const tel=v=>String(v).replace(/\D/g,'').slice(-10);
+function init(){run('getAll').then(r=>{S=r.schema;D=r.data;nav();render()})}
+function nav(){$('#side').innerHTML='<h2><i class="fa fa-landmark"></i> Fin Core</h2>'+NAV.map(x=>`<a class="${page==x[0]?'on':''}" onclick="go('${x[0]}')"><i class="fa ${x[1]}"></i>${x[2]||x[0]}</a>`).join('');
+ const B=[NAV[0],NAV[1],NAV[3],NAV[4]];$('#bot').innerHTML=B.map(x=>`<a class="${page==x[0]?'on':''}" onclick="go('${x[0]}')"><i class="fa ${x[1]}"></i>${x[2]||x[0]}</a>`).join('')+'<a onclick="$(\'#side\').classList.toggle(\'open\')"><i class="fa fa-bars"></i>Menu</a>'}
+function go(p){page=p;$('#side').classList.remove('open');nav();render();scrollTo(0,0)}
+function render(){Object.values(CH).forEach(c=>c.destroy());CH={};const t=(NAV.find(x=>x[0]==page)||[])[2]||page;$('#c').innerHTML=`<h1>${t}</h1><div id=p></div>`;
+ page=='Dashboard'?dash():page=='Reports'?reports():list(page)}
+// ---------- Dashboard
+function dash(){const A=D.Applications,F=D.FollowUps,C=D.Commissions,t=today(),sm=(a,k)=>a.reduce((s,x)=>s+N(x[k]),0),cnt=s=>A.filter(a=>a.Status==s).length;
+ const open=F.filter(f=>f.Status!='Done'),td=open.filter(f=>day(f.Date)==t),od=open.filter(f=>day(f.Date)<t&&f.Date);
+ const K=[['Total Customers',D.Customers.length,'fa-users'],['Total Leads',D.Leads.length,'fa-bullseye'],['Loan Applications',A.length,'fa-file-signature'],['Pending Applications',cnt('Applied')+cnt('Under Review'),'fa-hourglass-half'],['Approved Loans',cnt('Approved'),'fa-circle-check'],['Disbursed Loans',cnt('Disbursed'),'fa-money-bill-transfer'],['Rejected Loans',cnt('Rejected'),'fa-circle-xmark'],['Amount Applied',money(sm(A,'Requested')),'fa-indian-rupee-sign'],['Amount Disbursed',money(sm(A,'Disbursed')),'fa-sack-dollar'],['Commission Earned',money(sm(C.filter(c=>c.Status=='Received'),'Amount')),'fa-coins'],['Commission Pending',money(sm(C.filter(c=>c.Status!='Received'),'Amount')),'fa-clock'],["Today's Follow-ups",td.length,'fa-bell'],['Overdue Follow-ups',od.length,'fa-triangle-exclamation']];
+ $('#p').innerHTML=`<div class=cards>${K.map(k=>`<div class="card st"><div><span>${k[0]}</span><b>${k[1]}</b></div><i class="fa ${k[2]}"></i></div>`).join('')}</div>
+ <div class=two><div class=card><h3>Monthly Loan Disbursement</h3><canvas id=c1></canvas></div><div class=card><h3>Loan Type Distribution</h3><canvas id=c2></canvas></div></div>
+ <div class=two><div class=card><h3>Recent Customers</h3>${mini(['CustomerID','Name','Mobile'],D.Customers.slice(-5).reverse())}</div><div class=card><h3>Recent Applications</h3>${mini(['ApplicationID','CustomerName','Requested','Status'],A.slice(-5).reverse())}</div></div>
+ <div class=card><h3>Today's &amp; Overdue Follow-ups</h3>${mini(['CustomerID','Date','Note'],td.concat(od).slice(0,8))}</div>`;
+ const m={};A.filter(a=>N(a.Disbursed)>0&&a.DisbDate).forEach(a=>{const k=day(a.DisbDate).slice(0,7);m[k]=(m[k]||0)+N(a.Disbursed)});const ks=Object.keys(m).sort().slice(-12);
+ CH.a=new Chart($('#c1'),{type:'bar',data:{labels:ks,datasets:[{label:'Disbursed ₹',data:ks.map(k=>m[k]),backgroundColor:'#2563eb'}]},options:{plugins:{legend:{display:false}}}});
+ const lt={};A.forEach(a=>lt[a.LoanType||'Other']=(lt[a.LoanType||'Other']||0)+1);
+ CH.b=new Chart($('#c2'),{type:'doughnut',data:{labels:Object.keys(lt),datasets:[{data:Object.values(lt),backgroundColor:['#1d4ed8','#3b82f6','#60a5fa','#93c5fd','#0ea5e9','#64748b','#94a3b8','#cbd5e1']}]}})}
+function mini(cols,rows){return rows.length?`<div class=tw style="box-shadow:none"><table>${hd(cols)}${rows.map(r=>`<tr>${cols.map(k=>`<td>${fmt(k,r[k])}</td>`).join('')}</tr>`).join('')}</table></div>`:'<span style="color:var(--m)">No records</span>'}
+const hd=c=>'<tr>'+c.map(k=>`<th>${lab(k)}`).join('')+'</tr>';
+// ---------- Generic list
+function list(n){const fk=S[n].includes('Status')?'Status':S[n].includes('Category')?'Category':'';
+ $('#p').innerHTML=`<div class=bar><input id=q placeholder="Search name, phone, ID, PAN..." oninput="rows('${n}')">${fk?`<select id=f onchange="rows('${n}')"><option value="">All ${fk}</option>${[...new Set(D[n].map(x=>x[fk]).filter(Boolean))].map(o=>`<option>${E(o)}</option>`).join('')}</select>`:''}${n!='Activity'?`<button class=btn onclick="${n=='Documents'?'docForm()':`window.form('${n}')`}"><i class="fa fa-plus"></i> Add</button>`:''}<button class="btn gh" onclick="exp('${n}')"><i class="fa fa-download"></i> CSV</button></div><div id=tb></div>`;rows(n,fk)}
+function rows(n,fk){fk=S[n].includes('Status')?'Status':S[n].includes('Category')?'Category':'';const q=($('#q').value||'').toLowerCase(),f=$('#f')?$('#f').value:'',id=S[n][0];
+ const r=D[n].filter(x=>(!q||Object.values(x).join(' ').toLowerCase().includes(q))&&(!f||x[fk]==f)).slice().reverse();
+ $('#tb').innerHTML=`<div class=tw><table>${hd(COLS[n])}<tr>${r.map(x=>`<tr>${COLS[n].map(k=>`<td>${fmt(k,x[k])}</td>`).join('')}<td class=a>${act(n,x,id)}</td></tr>`).join('')}</table></div>`}
+function act(n,x,id){const i=x[id];let h='';if(n=='Customers')h+=`<button title=View onclick="prof('${i}')"><i class="fa fa-eye"></i></button>`;
+ if(x.Mobile)h+=`<a href="tel:${tel(x.Mobile)}"><i class="fa fa-phone"></i></a><a href="https://wa.me/91${tel(x.WhatsApp||x.Mobile)}" target=_blank style="color:#16a34a"><i class="fa-brands fa-whatsapp"></i></a>`;
+ if(n=='Leads')h+=`<button title="Create Application" onclick="leadApp('${i}')"><i class="fa fa-file-signature"></i></button>`;
+ if(n=='Documents')h+=`<a href="${E(x.Url)}" target=_blank><i class="fa fa-eye"></i></a><a href="https://drive.google.com/uc?export=download&id=${x.FileId}"><i class="fa fa-download"></i></a>`;
+ else if(n!='Activity')h+=`<button onclick="window.form('${n}','${i}')"><i class="fa fa-pen"></i></button>`;
+ return h+(n!='Activity'?`<button style="color:#dc2626" onclick="rm('${n}','${i}')"><i class="fa fa-trash"></i></button>`:'')}
+function csv(name,cols,rs){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const b=new Blob([[cols.map(lab).map(q).join(',')].concat(rs.map(r=>cols.map(k=>q(r[k])).join(','))).join('\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name+'.csv';a.click()}
+const exp=n=>csv(n,S[n],D[n]);
+// ---------- Forms
+function inp(n,k,v){const t=ft(n,k),i='f_'+k;v=t=='date'?day(v):E(v);
+ if(t[0]=='s')return`<select id=${i}><option></option>${OPT[t.slice(4)].map(o=>`<option ${o==v?'selected':''}>${o}</option>`).join('')}</select>`;
+ if(t=='textarea')return`<textarea id=${i} rows=2>${v}</textarea>`;
+ const l=k=='CustomerID'&&n!='Customers'?'list=cl oninput=fill()':k=='ApplicationID'&&n!='Applications'?'list=al':'';
+ return`<input id=${i} type=${t} value="${v}" ${l}>`}
+const dl=()=>`<datalist id=cl>${D.Customers.map(c=>`<option value="${c.CustomerID}">${E(c.Name)}</option>`).join('')}</datalist><datalist id=al>${D.Applications.map(a=>`<option value="${a.ApplicationID}">${E(a.CustomerName)}</option>`).join('')}</datalist>`;
+function fill(){const c=D.Customers.find(x=>x.CustomerID==$('#f_CustomerID').value);if(c){if($('#f_CustomerName'))$('#f_CustomerName').value=c.Name;if($('#f_Mobile'))$('#f_Mobile').value=c.Mobile}}
+function modal(h){$('#mo').innerHTML=`<div class=mo onclick="if(event.target==this)closeM()"><div class=md>${h}</div></div>`}
+const closeM=()=>$('#mo').innerHTML='';
+function form(n,id,def){const r=id?D[n].find(x=>x[S[n][0]]==id):(def||{});const ks=S[n].slice(1).filter(k=>k!='CreatedAt');
+ modal(`<h3>${id?'Edit':'Add'} ${lab(n)}</h3>${dl()}<div class=g>${ks.map(k=>`<label class="${ft(n,k)=='textarea'?'w':''}">${lab(k)}${inp(n,k,r[k])}</label>`).join('')}</div><div class=ac><button class=btn onclick="sv('${n}','${id||''}')">Save</button><button class="btn gh" onclick=closeM()>Cancel</button></div>`)}
+function sv(n,id){const rec={};S[n].slice(1).forEach(k=>{const e=$('#f_'+k);if(e)rec[k]=e.value});rec[S[n][0]]=id;
+ if(S[n].includes('Name')&&!rec.Name)return toast('Name is required',1);if(n=='Applications'&&!rec.CustomerID)return toast('Customer ID is required',1);
+ run('save',n,rec).then(r=>{Object.assign(D,r);closeM();render();toast('Saved')})}
+function rm(n,id){if(confirm('Delete '+id+'? This cannot be undone.'))run('del',n,id).then(r=>{Object.assign(D,r);render();toast('Deleted')})}
+function docForm(cid){modal(`<h3>Upload Document</h3>${dl()}<div class=g><label>Customer ID<input id=u_c list=cl value="${cid||''}"></label><label>Application ID<input id=u_a list=al></label><label>Document Type<select id=u_t>${OPT.DocType.map(o=>`<option>${o}</option>`).join('')}</select></label><label class=w>File (camera / gallery / computer)<input id=u_f type=file accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"></label></div><div class=ac><button class=btn onclick=up()>Upload</button><button class="btn gh" onclick=closeM()>Cancel</button></div>`)}
+function up(){const f=$('#u_f').files[0],c=$('#u_c').value;if(!c||!f)return toast('Select customer and file',1);if(f.size>15e6)return toast('Max 15 MB',1);
+ const r=new FileReader();r.onload=()=>run('upload',{CustomerID:c,ApplicationID:$('#u_a').value,DocType:$('#u_t').value,FileName:f.name,Mime:f.type||'application/octet-stream',Data:r.result.split(',')[1]}).then(x=>{Object.assign(D,x);closeM();render();toast('Uploaded')});r.readAsDataURL(f);toast('Uploading...')}
+// ---------- Customer profile
+function prof(id){const c=D.Customers.find(x=>x.CustomerID==id),by=n=>D[n].filter(x=>x.CustomerID==id);
+ modal(`<h3>${E(c.Name)} <small style="color:var(--m)">${id}</small></h3><div class=ac style="margin:0 0 10px"><a class=btn href="tel:${tel(c.Mobile)}"><i class="fa fa-phone"></i> Call</a><a class=btn style="background:#16a34a" target=_blank href="https://wa.me/91${tel(c.WhatsApp||c.Mobile)}"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a><button class="btn gh" onclick="docForm('${id}')">Upload Doc</button><button class="btn gh" onclick="window.form('FollowUps','',{CustomerID:'${id}'})">Follow-up</button><button class="btn gh" onclick="window.form('Applications','',{CustomerID:'${id}',CustomerName:'${E(c.Name)}',Mobile:'${E(c.Mobile)}'})">New Loan</button></div>
+ <div class=g>${S.Customers.slice(1).map(k=>c[k]?`<div><small style="color:var(--m)">${lab(k)}</small><br>${fmt(k,c[k])}</div>`:'').join('')}</div>
+ <h4>Loan History</h4>${mini(['ApplicationID','LoanType','Provider','Requested','Disbursed','Status'],by('Applications'))}
+ <h4>Follow-up History</h4>${mini(['Date','Note','Status'],by('FollowUps'))}
+ <h4>Documents</h4>${mini(['DocType','FileName','ApplicationID'],by('Documents'))}
+ <h4>Commissions</h4>${mini(['CommissionID','ApplicationID','Provider','Amount','Status'],D.Commissions.filter(x=>x.CustomerID==id||by('Applications').some(a=>a.ApplicationID==x.ApplicationID)))}
+ <h4>Payments</h4>${mini(['PaymentID','ApplicationID','Amount','Date','Mode'],D.Payments.filter(x=>x.CustomerID==id||by('Applications').some(a=>a.ApplicationID==x.ApplicationID)))}
+ <h4>Customer History</h4>${mini(['DateTime','Action','Description'],by('Activity').reverse().slice(0,15))}
+ <div class=ac><button class="btn gh" onclick=closeM()>Close</button></div>`)}
+// ---------- Reports
+function grp(k,l){const m={};D.Applications.forEach(a=>{const g=String(a[k]||'—').slice(0,l||99),o=m[g]=m[g]||{Group:g,Applications:0,Requested:0,Approved:0,Disbursed:0};o.Applications++;['Requested','Approved','Disbursed'].forEach(f=>o[f]+=N(a[f]))});return[['Group','Applications','Requested','Approved','Disbursed'],Object.values(m)]}
+const ap=s=>[COLS.Applications,D.Applications.filter(a=>!s||a.Status==s)];
+const REP={'Customer Report':()=>[S.Customers,D.Customers],'Lead Report':()=>[S.Leads,D.Leads],'Loan Application Report':()=>ap(),'Approved Loan Report':()=>ap('Approved'),'Disbursed Loan Report':()=>ap('Disbursed'),'Rejected Loan Report':()=>ap('Rejected'),'Bank-wise Report':()=>grp('Provider'),'Loan Type Report':()=>grp('LoanType'),'Monthly Report':()=>grp('AppDate',7),'Commission Report':()=>[S.Commissions,D.Commissions]};
+function reports(){$('#p').innerHTML=`<div class=bar><select id=rs onchange=rep()>${Object.keys(REP).map(k=>`<option>${k}</option>`).join('')}</select><button class="btn gh" onclick="const r=REP[$('#rs').value]();csv($('#rs').value,r[0],r[1])"><i class="fa fa-download"></i> CSV</button></div><div id=tb></div>`;rep()}
+function rep(){const r=REP[$('#rs').value]();$('#tb').innerHTML=`<div class=tw><table>${hd(r[0])}${r[1].map(x=>`<tr>${r[0].map(k=>`<td>${/Requested|Approved|Disbursed/.test(k)&&r[0][0]=='Group'?money(x[k]):fmt(k,x[k])}</td>`).join('')}</tr>`).join('')}</table></div>`}
+function leadApp(id){const l=D.Leads.find(x=>x.LeadID==id);if(!l)return;toast('Preparing application...');
+ run('leadToCustomer',id).then(r=>{const cid=r._cid;delete r._cid;Object.assign(D,r);const c=D.Customers.find(x=>x.CustomerID==cid)||{};render();
+  window.form('Applications','',{CustomerID:cid,CustomerName:c.Name||l.Name,Mobile:c.Mobile||l.Mobile,LoanType:l.LoanType,Requested:l.Amount})})}
+(function(){const fix=()=>document.querySelectorAll('.tw table:not([data-c])').forEach(t=>{const h=[...t.querySelectorAll('th')].map(x=>x.textContent);t.querySelectorAll('tr').forEach(r=>[...r.children].forEach((td,i)=>{if(td.tagName=='TD'&&h[i])td.dataset.label=h[i]}));t.dataset.c=1});
+ new MutationObserver(()=>requestAnimationFrame(fix)).observe(document.body,{childList:true,subtree:true})})();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+init();
+</script></body></html>
