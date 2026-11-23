@@ -136,7 +136,7 @@ function mini(cols,rows){return rows.length?`<div class=tw style="box-shadow:non
 const hd=c=>'<tr>'+c.map(k=>`<th>${lab(k)}`).join('')+'</tr>';
 // ---------- Generic list
 function list(n){const fk=S[n].includes('Status')?'Status':S[n].includes('Category')?'Category':'';
- $('#p').innerHTML=`<div class=bar><input id=q placeholder="Search name, phone, ID, PAN..." oninput="rows('${n}')">${fk?`<select id=f onchange="rows('${n}')"><option value="">All ${fk}</option>${[...new Set(D[n].map(x=>x[fk]).filter(Boolean))].map(o=>`<option>${E(o)}</option>`).join('')}</select>`:''}${n!='Activity'?`<button class=btn onclick="${n=='Documents'?'docForm()':`window.form('${n}')`}"><i class="fa fa-plus"></i> Add</button>`:''}<button class="btn gh" onclick="exp('${n}')"><i class="fa fa-download"></i> CSV</button></div><div id=tb></div>`;rows(n,fk)}
+ $('#p').innerHTML=`<div class=bar><input id=q placeholder="Search name, phone, ID, PAN..." oninput="rows('${n}')">${fk?`<select id=f onchange="rows('${n}')"><option value="">All ${fk}</option>${[...new Set(D[n].map(x=>x[fk]).filter(Boolean))].map(o=>`<option>${E(o)}</option>`).join('')}</select>`:''}${n!='Activity'?`<button class=btn onclick="${n=='Documents'?'docForm()':`window.form('${n}')`}"><i class="fa fa-plus"></i> Add</button>`:''}${n=='Leads'?'<button class="btn gh" onclick="scanForm()"><i class="fa fa-camera"></i> Scan</button>':''}<button class="btn gh" onclick="exp('${n}')"><i class="fa fa-download"></i> CSV</button></div><div id=tb></div>`;rows(n,fk)}
 function rows(n,fk){fk=S[n].includes('Status')?'Status':S[n].includes('Category')?'Category':'';const q=($('#q').value||'').toLowerCase(),f=$('#f')?$('#f').value:'',id=S[n][0];
  const r=D[n].filter(x=>(!q||Object.values(x).join(' ').toLowerCase().includes(q))&&(!f||x[fk]==f)).slice().reverse();
  $('#tb').innerHTML=`<div class=tw><table>${hd(COLS[n])}<tr>${r.map(x=>`<tr>${COLS[n].map(k=>`<td>${fmt(k,x[k])}</td>`).join('')}<td class=a>${act(n,x,id)}</td></tr>`).join('')}</table></div>`}
@@ -178,6 +178,22 @@ function prof(id){const c=D.Customers.find(x=>x.CustomerID==id),by=n=>D[n].filte
  <h4>Payments</h4>${mini(['PaymentID','ApplicationID','Amount','Date','Mode'],D.Payments.filter(x=>x.CustomerID==id||by('Applications').some(a=>a.ApplicationID==x.ApplicationID)))}
  <h4>Customer History</h4>${mini(['DateTime','Action','Description'],by('Activity').reverse().slice(0,15))}
  <div class=ac><button class="btn gh" onclick=closeM()>Close</button></div>`)}
+ // ---------- Scan page -> Leads (free Google OCR)
+let SC=[];
+async function shrink(file){
+ const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('Photo open nahi hui'));i.src=URL.createObjectURL(file)});
+ const k=Math.min(1,2000/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+ let b;for(const q of [.85,.7,.55]){b=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(b.size<1.8e6)break}
+ return new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result.split(',')[1]);r.readAsDataURL(b)})}
+function scanForm(){modal(`<h3>Scan Page &rarr; Leads</h3><p style="color:var(--m);margin:0 0 10px">Naam aur mobile number wale page ki saaf photo lo (camera ya gallery). Page seedha, roshni me, aur har line alag ho.</p><input id=sc_f type=file accept="image/*"><div id=sc_r style="margin-top:12px"></div><div class=ac><button class="btn gh" onclick=closeM()>Close</button></div>`);
+ $('#sc_f').onchange=async()=>{const f=$('#sc_f').files[0];if(!f)return;$('#sc_r').innerHTML='<div class="card sk" style="height:60px"></div><small style="color:var(--m)">Photo padh rahe hain... 10-20 second lag sakte hain</small>';
+  try{const d=await shrink(f);const r=await run('scanLeads',{Mime:'image/jpeg',Data:d});scanShow(r)}catch(e){$('#sc_r').innerHTML='<span style="color:#dc2626">'+E(e.message)+'</span>'}}}
+function scanShow(r){SC=r.rows||[];
+ $('#sc_r').innerHTML=(SC.length?`<p style="margin:0 0 8px"><b>${SC.length}</b> entry mili. Galat naam/number yahin theek kar lo, phir Save dabao.</p><div class=tw><table><tr><th>Add<th>Name<th>Mobile<th>Status</tr>${SC.map((x,i)=>`<tr><td><input type=checkbox id=s_c${i} ${x.Dup?'':'checked'} style="width:auto"></td><td><input id=s_n${i} value="${E(x.Name)}"></td><td><input id=s_m${i} value="${E(x.Mobile)}" inputmode=tel></td><td>${x.Dup?`<span class="bd y">${E(x.Dup)}</span>`:'<span class="bd g">New</span>'}</td></tr>`).join('')}</table></div><div class=ac><button class=btn onclick=scanSave()>Save Leads</button></div>`:'<span style="color:var(--m)">Koi naam + number nahi mila. Saaf, seedhi aur roshni wali photo dobara lo.</span>')
+ +`<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--m)">Photo se jo text padha (raw)</summary><pre style="white-space:pre-wrap;font-size:12px">${E(r.raw||'')}</pre></details>`}
+function scanSave(){const rows=[];SC.forEach((x,i)=>{if($('#s_c'+i).checked)rows.push({Name:$('#s_n'+i).value,Mobile:$('#s_m'+i).value})});
+ if(!rows.length)return toast('Koi entry select nahi hai',1);toast('Save ho raha hai...');
+ run('saveLeadsBulk',rows).then(r=>{const a=r._added,k=r._skipped;delete r._added;delete r._skipped;Object.assign(D,r);closeM();render();toast(a+' leads add hui'+(k?', '+k+' skip (duplicate/khali)':''))})}
 // ---------- Reports
 function grp(k,l){const m={};D.Applications.forEach(a=>{const g=String(a[k]||'—').slice(0,l||99),o=m[g]=m[g]||{Group:g,Applications:0,Requested:0,Approved:0,Disbursed:0};o.Applications++;['Requested','Approved','Disbursed'].forEach(f=>o[f]+=N(a[f]))});return[['Group','Applications','Requested','Approved','Disbursed'],Object.values(m)]}
 const ap=s=>[COLS.Applications,D.Applications.filter(a=>!s||a.Status==s)];
