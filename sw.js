@@ -1,5 +1,5 @@
-const CACHE_NAME = "wealthbridge-cache-v1";
-const urlsToCache = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
+const CACHE_NAME = "fincore-cache-v2";
+const urlsToCache = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -28,7 +28,7 @@ self.addEventListener("fetch", (event) => {
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          if (!/invest\.html$/.test(new URL(req.url).pathname)) caches.open(CACHE_NAME).then((c) => c.put("./index.html", copy));
+          caches.open(CACHE_NAME).then((c) => c.put("./index.html", copy));
           return res;
         })
         .catch(() => caches.match("./index.html"))
